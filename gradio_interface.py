@@ -1,3 +1,8 @@
+import os
+
+# Set Gradio temp dir to a local folder to avoid permission issues
+os.environ["GRADIO_TEMP_DIR"] = os.path.join(os.getcwd(), "gradio_tmp")
+
 import torch
 import torchaudio
 import gradio as gr
@@ -238,7 +243,7 @@ def build_interface():
                     info="Select a language code.",
                 )
             prefix_audio = gr.Audio(
-                value="assets/silence_100ms.wav",
+                value=os.path.abspath("assets/silence_100ms.wav"),
                 label="Optional Prefix Audio (continue from this audio)",
                 type="filepath",
             )
@@ -414,6 +419,21 @@ def build_interface():
 
 
 if __name__ == "__main__":
+    import os
     demo = build_interface()
     share = getenv("GRADIO_SHARE", "False").lower() in ("true", "1", "t")
-    demo.launch(server_name="0.0.0.0", server_port=7860, share=share)
+    
+    # Use absolute paths for safety and clarity
+    cwd = os.getcwd()
+    allowed_paths = [
+        cwd,
+        os.path.join(cwd, "assets"),
+        os.path.join(cwd, "models"),
+        os.path.join(cwd, "outputs"),
+        os.path.join(cwd, "uploads"),
+        os.path.join(cwd, "gradio_tmp"),
+    ]
+    print(f"Current working directory: {cwd}")
+    print(f"Allowed paths: {allowed_paths}")
+    
+    demo.launch(server_name="0.0.0.0", server_port=7860, share=share, allowed_paths=allowed_paths)
